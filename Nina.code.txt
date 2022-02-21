@@ -1,0 +1,123 @@
+/*11*/
+PROC IMPORT OUT= assignment
+DATAFILE= "C:\Users\nto-le01\Documents\516\2021\Nina.data.xlsx"
+DBMS=xlsx REPLACE;
+GETNAMES=YES;
+RUN;
+/*12a*/
+proc sql outobs=200;
+   title 'Table 1';
+   select Company_Name, SNL_Institution_Key, Country_of_incorporation, 'Nguyet To'
+      from work.assignment;
+/*12b*/
+DATA Table2; 
+   SET work.assignment;
+   KEEP Assets_Total Liabilities_Total NIBT Common_Shares_Outstanding EPS Sales Income_Taxes Interest_Expense Postal_Code SIC;
+	where Fiscal_Data = '2005Q4' 
+or Fiscal_Data = '2006Q4' 
+or Fiscal_Data = '2007Q4' 
+or Fiscal_Data = '2008Q4'
+or Fiscal_Data = '2009Q4' 
+or Fiscal_Data = '2010Q4'
+or Fiscal_Data = '2011Q4'
+or Fiscal_Data = '2012Q4'
+or Fiscal_Data = '2013Q4'
+or Fiscal_Data = '2014Q4'
+or Fiscal_Data = '2015Q4'
+or Fiscal_Data = '2016Q4'
+or Fiscal_Data = '2017Q4'
+or Fiscal_Data = '2018Q4'
+or Fiscal_Data = '2019Q4';
+RUN;
+
+/*remove
+proc sql outobs=12;
+   title 'Table 2';
+   select Assets_Total, Liabilities_Total, NIBT, Common_Shares_Outstanding, EPS, Sales, Income_Taxes, Interest_Expense, Postal_Code, SIC
+      from work.assignment
+      where Fiscal_Data = '2005Q4' 
+or Fiscal_Data = '2006Q4' 
+or Fiscal_Data = '2007Q4' 
+or Fiscal_Data = '2008Q4'
+or Fiscal_Data = '2009Q4' 
+or Fiscal_Data = '2010Q4'
+or Fiscal_Data = '2011Q4'
+or Fiscal_Data = '2012Q4'
+or Fiscal_Data = '2013Q4'
+or Fiscal_Data = '2014Q4'
+or Fiscal_Data = '2015Q4'
+or Fiscal_Data = '2016Q4'
+or Fiscal_Data = '2017Q4'
+or Fiscal_Data = '2018Q4'
+or Fiscal_Data = '2019Q4';*/
+
+proc means data=Table2;
+title 'Table 2';
+run;
+/*12c*/
+DATA Table3; 
+   SET work.assignment;
+   KEEP Assets_Total Liabilities_Total NIBT Common_Shares_Outstanding EPS Sales Income_Taxes Interest_Expense Postal_Code SIC;
+   run;
+proc means data=Table3;
+title 'Table 3';
+run;
+/*12d*/
+proc sort data=work.assignment;
+by Ticker_Symbol CUSIP Company_Name Fiscal_Data Fiscal_Year;
+run;
+data quarterly_growth;
+    set work.assignment;
+    by Ticker_Symbol CUSIP Company_Name Fiscal_Data Fiscal_Year;
+    prev_Assets_Total=lag(Assets_Total);
+    growth_rate_Assets_Total=(Assets_Total-prev_Assets_Total)/prev_Assets_Total;
+
+	prev_Liabilities_Total=lag(Liabilities_Total);
+    growth_rate_Liabilities_Total=(Liabilities_Total-prev_Liabilities_Total)/prev_Liabilities_Total;
+
+	prev_NIBT=lag(NIBT);
+    growth_rate_NIBT=(NIBT-prev_NIBT)/prev_NIBT;
+
+	prev_Common_Shares_Outstanding=lag(Common_Shares_Outstanding);
+    growth_rate_Shares=(Common_Shares_Outstanding-prev_Common_Shares_Outstanding)/prev_Common_Shares_Outstanding;
+
+	prev_EPS=lag(EPS);
+    growth_rate_EPS=(EPS-prev_EPS)/prev_EPS;
+
+	prev_Sales=lag(Sales);
+    growth_rate_Sales=(Sales-prev_Sales)/prev_Sales;
+
+	prev_Income_Taxes=lag(Income_Taxes);
+    growth_rate_Income_Taxes=(Income_Taxes-prev_Income_Taxes)/prev_Income_Taxes;
+
+	prev_Interest_Expense=lag(Interest_Expense);
+    growth_rate_Interest_Expense=(Interest_Expense-prev_Interest_Expense)/prev_Interest_Expense;
+
+	prev_Postal_Code=lag(Postal_Code);
+    growth_rate_Postal_Code=(Postal_Code-prev_Postal_Code)/prev_Postal_Code;
+
+	prev_SIC=lag(SIC);
+    growth_rate_SIC=(SIC-prev_SIC)/prev_SIC;
+
+    format growth_rate_Assets_Total growth_rate_Liabilities_Total growth_rate_NIBT growth_rate_Shares growth_rate_EPS growth_rate_Sales growth_rate_Income_Taxes growth_rate_Interest_Expense growth_rate_Postal_Code growth_rate_SIC percent8.1;
+run;
+DATA Table4; 
+   SET work.quarterly_growth;
+   KEEP growth_rate_Assets_Total growth_rate_Liabilities_Total growth_rate_NIBT growth_rate_Shares growth_rate_EPS growth_rate_Sales growth_rate_Income_Taxes growth_rate_Interest_Expense growth_rate_Postal_Code growth_rate_SIC;
+RUN;
+proc means data=Table4;
+title 'Table 4';
+run;
+/*12e*/
+data Table5;
+set Table2;
+if SIC >=5000 then group="A";
+if SIC <5000 then group="B";
+run;
+proc tabulate data = table5;
+title 'Table 5';
+ class group;
+ var Assets_Total Liabilities_Total NIBT Common_Shares_Outstanding EPS Sales Income_Taxes Interest_Expense Postal_Code SIC;
+ tables (Assets_Total*(n mean std min max pctn)  Liabilities_Total*(n mean std min max pctn) NIBT*(n mean std min max pctn) Common_Shares_Outstanding*(n mean std min max pctn) EPS*(n mean std min max pctn) Sales*(n mean std min max pctn) Income_Taxes*(n mean std min max pctn) Interest_Expense*(n mean std min max pctn) Postal_Code*(n mean std min max pctn) SIC*(n mean std min max pctn)),group all='Total';
+run;
+

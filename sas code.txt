@@ -1,0 +1,433 @@
+options ls=256 ps=30000 nocenter;
+
+PROC IMPORT OUT= WORK.data
+DATAFILE= "C:\Users\nto-le01\Downloads\data.xlsx"
+DBMS=xlsx REPLACE;
+GETNAMES=YES;
+RUN;
+
+data data1;
+set data;
+mdate=put(date,yymmddn8.);
+run;
+
+proc sort data=data1;  by Ticker_Symbol;  run;
+
+proc reg data=data1;
+by Ticker_Symbol;
+model Ri=Rm; 
+output out=data2 r=abri;
+run;
+
+/*abri: abnormal return of stock*/
+proc means data=data2;
+by Ticker_Symbol;
+var abri;
+run;
+
+/*descriptive statistics*/
+proc means data=data2;
+by Ticker_Symbol;
+var ri rm abri;
+run;
+
+proc means n mean median min max std q1 q3 data=data2;
+var ri rm abri;
+run;
+
+/*correlation matrix*/
+proc corr data=data2;
+by Ticker_Symbol;
+var ri rm abri;
+run;
+
+proc corr data=data2;
+var ri rm abri;
+run;
+
+/*test normality*/
+proc capability data=data2 normal;
+var abri;
+qqplot abri /normal (mu=est sigma=est color=red l=1);
+ppplot abri /normal (mu=est sigma=est color=red l=1);
+histogram /normal (color=maroon w=4) cfill=blue cframe=ligr;
+inset mean min max std/cfill=blank format=5.2;
+run;
+
+/*test collinearity*/
+proc reg data=data2;
+model ri=rm
+/ tol vif collin;
+run;
+
+/*homoskedasticity*/
+proc autoreg data=data2;
+model ri=rm/archtest;
+output out=data3 r=abri;
+run;
+
+proc model data=data2;
+parms b0 b1;
+Ri = b0 + b1*Rm;
+fit Ri/white;
+run;
+
+/*outliers*/
+proc univariate data=data2 robustscale plot;
+var abri;
+run;
+
+/*abnormal returns and cars*/
+proc sort data=data2; by Ticker_Symbol descending  Date;
+
+data data3;
+set data2;
+abri1=lag1(abri);
+abri2=lag2(abri);
+abri3=lag3(abri);
+abri4=lag4(abri);
+abri5=lag5(abri);
+abri6=lag6(abri);
+abri7=lag7(abri);
+abri8=lag8(abri);
+abri9=lag9(abri);
+abri10=lag10(abri);
+abri11=lag11(abri);
+abri12=lag12(abri);
+abri13=lag13(abri);
+abri14=lag14(abri);
+CAR01=abri+abri1;
+CAR07=abri+abri1+abri2+abri3+abri4+abri5+abri6+abri7;
+CAR14=abri+abri1+abri2+abri3+abri4+abri5+abri6+abri7+abri8+abri9+abri10+abri11+abri12+abri13+abri14;
+
+data CAH;
+set data3;
+if Ticker_Symbol ^= "CAH" then delete;
+if mdate^= 20200921 then delete;
+proc print data=CAH;
+run;
+data JPM;
+set data3;
+if Ticker_Symbol ^= "JPM" then delete;
+if mdate^= 20200921 then delete;
+proc print data=JPM;
+run;
+data DOMINION;
+set data3;
+if Ticker_Symbol ^= "D" then delete;
+if mdate^= 20200921 then delete;
+proc print data=DOMINION;
+run;
+data HLT;
+set data3;
+if Ticker_Symbol ^= "HLT" then delete;
+if mdate^= 20200930 then delete;
+proc print data=HLT;
+run;
+data TILE;
+set data3;
+if Ticker_Symbol ^= "TILE" then delete;
+if mdate^= 20200928 then delete;
+proc print data=TILE;
+run;
+data WFC;
+set data3;
+if Ticker_Symbol ^= "WFC" then delete;
+if mdate^= 20191217 then delete;
+proc print data=WFC;
+run;
+data QMCO;
+set data3;
+if Ticker_Symbol ^= "QMCO" then delete;
+if mdate^= 20190920 then delete;
+proc print data=QMCO;
+run;
+data PPC;
+set data3;
+if Ticker_Symbol ^= "PPC" then delete;
+if mdate^= 20201014 then delete;
+proc print data=PPC;
+run;
+data FULT;
+set data3;
+if Ticker_Symbol ^= "FULT" then delete;
+if mdate^= 20200921 then delete;
+proc print data=FULT;
+run;
+data HLF;
+set data3;
+if Ticker_Symbol ^= "HLF" then delete;
+if mdate^= 20190927 then delete;
+proc print data=HLF;
+run;
+data ARGO;
+set data3;
+if Ticker_Symbol ^= "ARGO" then delete;
+if mdate^= 20200406 then delete;
+proc print data=ARGO;
+run;
+data ICON;
+set data3;
+if Ticker_Symbol ^= "ICON" then delete;
+if mdate^= 20191205 then delete;
+proc print data=ICON;
+run;
+data WRLD;
+set data3;
+if Ticker_Symbol ^= "WRLD" then delete;
+if mdate^= 20191217 then delete;
+proc print data=WRLD;
+run;
+data HPE;
+set data3;
+if Ticker_Symbol ^= "HPE" then delete;
+if mdate^= 20200930 then delete;
+proc print data=HPE;
+run;
+data AEMD;
+set data3;
+if Ticker_Symbol ^= "AEMD" then delete;
+if mdate^= 20200224 then delete;
+proc print data=AEMD;
+run;
+data BWA;
+set data3;
+if Ticker_Symbol ^= "BWA" then delete;
+if mdate^= 20200921 then delete;
+proc print data=BWA;
+run;
+data BHC;
+set data3;
+if Ticker_Symbol ^= "BHC" then delete;
+if mdate^= 20200921 then delete;
+proc print data=BHC;
+run;
+data ALXN;
+set data3;
+if Ticker_Symbol ^= "ALXN" then delete;
+if mdate^= 20200207 then delete;
+proc print data=ALXN;
+run;
+data GS;
+set data3;
+if Ticker_Symbol ^= "GS" then delete;
+if mdate^= 20200921 then delete;
+proc print data=GS;
+run;
+data JNPR;
+set data3;
+if Ticker_Symbol ^= "JNPR" then delete;
+if mdate^= 20190829 then delete;
+proc print data=JNPR;
+run;
+data MNTX;
+set data3;
+if Ticker_Symbol ^= "MNTX" then delete;
+if mdate^= 20200929 then delete;
+proc print data=MNTX;
+run;
+data UAA;
+set data3;
+if Ticker_Symbol ^= "UAA" then delete;
+if mdate^= 20191217 then delete;
+proc print data=UAA;
+run;
+data PANW;
+set data3;
+if Ticker_Symbol ^= "PANW" then delete;
+if mdate^= 20191217 then delete;
+proc print data=PANW;
+run;
+data HIL;
+set data3;
+if Ticker_Symbol ^= "HIL" then delete;
+if mdate^= 20200116 then delete;
+proc print data=HIL;
+run;
+data SCOR;
+set data3;
+if Ticker_Symbol ^= "SCOR" then delete;
+if mdate^= 20200921 then delete;
+proc print data=SCOR;
+run;
+data MDXG;
+set data3;
+if Ticker_Symbol ^= "MDXG" then delete;
+if mdate^= 20191126 then delete;
+proc print data=MDXG;
+run;
+data ZTNO;
+set data3;
+if Ticker_Symbol ^= "ZTNO" then delete;
+if mdate^= 20200414 then delete;
+proc print data=ZTNO;
+run;
+data QUAD;
+set data3;
+if Ticker_Symbol ^= "QUAD" then delete;
+if mdate^= 20190926 then delete;
+proc print data=QUAD;
+run;
+data PSIX;
+set data3;
+if Ticker_Symbol ^= "PSIX" then delete;
+if mdate^= 20200924 then delete;
+proc print data=PSIX;
+run;
+data APPB;
+set data3;
+if Ticker_Symbol ^= "APPB" then delete;
+if mdate^= 20200514 then delete;
+proc print data=APPB;
+run;
+data ARYC;
+set data3;
+if Ticker_Symbol ^= "ARYC" then delete;
+if mdate^= 20200925 then delete;
+proc print data=ARYC;
+run;
+data LTUM;
+set data3;
+if Ticker_Symbol ^= "LTUM" then delete;
+if mdate^= 20200804 then delete;
+proc print data=LTUM;
+run;
+data NBDR;
+set data3;
+if Ticker_Symbol ^= "NBDR" then delete;
+if mdate^= 20200304 then delete;
+proc print data=NBDR ;
+run;
+data PXYN;
+set data3;
+if Ticker_Symbol ^= "PXYN" then delete;
+if mdate^= 20200428 then delete;
+proc print data=PXYN ;
+run;
+data TRBO;
+set data3;
+if Ticker_Symbol ^= "TRBO" then delete;
+if mdate^= 20191217 then delete;
+proc print data=TRBO;
+run;
+data LITH;
+set data3;
+if Ticker_Symbol ^= "LITH" then delete;
+if mdate^= 20200921 then delete;
+proc print data=LITH ;
+run;
+
+data misconduct;
+merge 
+CAH
+JPM
+DOMINION
+HLT
+TILE
+WFC
+QMCO
+PPC
+FULT
+HLF
+ARGO
+ICON
+WRLD
+HPE
+AEMD
+BWA
+BHC
+ALXN
+GS
+JNPR
+MNTX
+UAA
+PANW
+HIL
+SCOR
+MDXG
+ZTNO
+QUAD
+PSIX
+APPB
+ARYC
+LTUM
+NBDR
+PXYN
+TRBO
+LITH;
+by Ticker_Symbol;
+proc print data=misconduct;
+run;
+
+/*election 1 9112020*/
+data strongpunishment1;
+set data3;
+CAR04=abri+abri1+abri2+abri3+abri4;
+if mdate^= 20201109 then delete;
+run;
+data election1;
+	set strongpunishment1;
+	if Ticker_Symbol= 'PPC' then delete;
+	if Ticker_Symbol= 'JNPR' then delete;
+	if Ticker_Symbol= 'MNTX' then delete;
+	if Ticker_Symbol= 'MDXG' then delete;
+	if Ticker_Symbol= 'PSIX' then delete;
+	keep mdate Ticker_Symbol Company_Name Types_of_Crime Ri Rm abri abri1 abri2 abri3 abri4 CAR01 CAR04;
+run;
+proc print data=election1;
+run;
+proc means data=election1;
+var abri CAR01 CAR04;
+run;
+proc ttest data=election1;
+var abri CAR01 CAR04;
+run;
+/*election 2 612021*/
+data strongpunishment2;
+set data3;
+if mdate^= 20210106 then delete;
+run;
+data election2;	
+	set strongpunishment2;
+	if Ticker_Symbol= 'PPC' then delete;
+	if Ticker_Symbol= 'JNPR' then delete;
+	if Ticker_Symbol= 'MNTX' then delete;
+	if Ticker_Symbol= 'MDXG' then delete;
+	if Ticker_Symbol= 'PSIX' then delete;
+	keep mdate Ticker_Symbol Company_Name Types_of_Crime Ri Rm abri abri1 CAR01;
+run;
+proc print data=election2;
+run;
+proc means data=election2;
+var abri CAR01;
+run;
+proc ttest data=election2;
+var abri CAR01;
+run;
+
+/*robustness tests*/
+proc sort data=election1;
+by Types_of_Crime;
+run;
+proc means data=election1;
+by Types_of_Crime;
+var abri CAR01 CAR04;
+run;
+proc ttest data=election1;
+by Types_of_Crime;
+var abri CAR01 CAR04;
+run;
+proc sort data=election2;
+by Types_of_Crime;
+run;
+proc means data=election2;
+by Types_of_Crime;
+var abri CAR01;
+run;
+proc ttest data=election2;
+by Types_of_Crime;
+var abri CAR01;
+run;
+
+
+
